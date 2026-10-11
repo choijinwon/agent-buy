@@ -1,21 +1,25 @@
-/* Static app shell only. Purchase records stay in the browser's local storage. */
+/* Static app shell only. Encrypted purchase records stay on this device. */
 const CACHE_PREFIX = 'mwo-satji-shell-';
-const CACHE_NAME = `${CACHE_PREFIX}v2`;
+const CACHE_NAME = `${CACHE_PREFIX}v3`;
 const IS_LOCAL_PREVIEW = ['localhost', '127.0.0.1', '[::1]', '::1']
   .includes(new URL(self.registration.scope).hostname);
-const SHELL_PATHS = [
-  './',
+const CORE_PATHS = [
   './index.html',
   './styles.css',
   './app.js',
   './domain.js',
+  './vault.js',
+  './device-store.js',
   './manifest.webmanifest',
+];
+const OPTIONAL_PATHS = [
   './assets/icon.svg',
   './assets/icon-192.png',
   './assets/icon-512.png',
 ];
-const SHELL_URLS = SHELL_PATHS.map((path) => new URL(path, self.registration.scope).href);
-const STATIC_URLS = new Set(SHELL_URLS);
+const CORE_URLS = CORE_PATHS.map((path) => new URL(path, self.registration.scope).href);
+const OPTIONAL_URLS = OPTIONAL_PATHS.map((path) => new URL(path, self.registration.scope).href);
+const STATIC_URLS = new Set([...CORE_URLS, ...OPTIONAL_URLS]);
 const INDEX_URL = new URL('./index.html', self.registration.scope).href;
 const NAVIGATION_URLS = new Set([
   self.registration.scope,
@@ -32,9 +36,24 @@ self.addEventListener('install', (event) => {
       await self.skipWaiting();
       return;
     }
+    // Fetch the complete core before writing. A failed update must leave the
+    // previous worker and its complete offline cache available.
+    const coreResponses = await Promise.all(CORE_URLS.map(async (url) => {
+      const response = await fetch(new Request(url, { cache: 'reload', redirect: 'error' }));
+      if (!mayCache(response)) throw new Error(`App shell unavailable: ${url}`);
+      return response;
+    }));
     const cache = await caches.open(CACHE_NAME);
-    // A missing optional icon must not prevent the rest of the app going offline.
-    await Promise.allSettled(SHELL_URLS.map(async (url) => {
+    try {
+      for (let index = 0; index < CORE_URLS.length; index += 1) {
+        await cache.put(CORE_URLS[index], coreResponses[index]);
+      }
+    } catch (error) {
+      await caches.delete(CACHE_NAME);
+      throw error;
+    }
+    // A missing optional icon must not prevent the complete core going offline.
+    await Promise.allSettled(OPTIONAL_URLS.map(async (url) => {
       const response = await fetch(new Request(url, { cache: 'reload', redirect: 'error' }));
       if (mayCache(response)) await cache.put(url, response);
     }));

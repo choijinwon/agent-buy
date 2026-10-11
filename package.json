@@ -1,11 +1,11 @@
 {
   "name": "mwo-satji",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
     "test": "node --test tests/*.test.mjs",
-    "check": "node --check dist/app.js && node --check dist/domain.js && node --check dist/sw.js"
+    "check": "node --check dist/app.js && node --check dist/domain.js && node --check dist/sw.js && node --check dist/vault.js && node --check dist/device-store.js"
   }
 }
