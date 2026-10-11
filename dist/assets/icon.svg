@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <title>뭐샀지 앱 아이콘</title>
+  <rect width="512" height="512" fill="#294c40"/>
+  <path d="M166 207h180l18 140a26 26 0 0 1-26 29H174a26 26 0 0 1-26-29l18-140Z" fill="#e6eee7"/>
+  <path d="M210 225v-39a46 46 0 0 1 92 0v39" stroke="#f7f8f5" stroke-width="19" stroke-linecap="round"/>
+  <path d="M210 225v-18m92 18v-18" stroke="#294c40" stroke-width="19" stroke-linecap="round"/>
+  <circle cx="223" cy="290" r="10" fill="#294c40"/>
+  <circle cx="289" cy="290" r="10" fill="#294c40"/>
+  <path d="M242 320c8 8 20 8 28 0" stroke="#294c40" stroke-width="8" stroke-linecap="round"/>
+</svg>

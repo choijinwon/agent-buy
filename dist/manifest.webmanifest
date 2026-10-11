@@ -1,0 +1,35 @@
+{
+  "id": "./",
+  "name": "뭐샀지 · 나의 구매 기억",
+  "short_name": "뭐샀지",
+  "description": "고양이, 강아지, 옷부터 일상까지. 한 줄로 남기는 나의 구매 기억.",
+  "lang": "ko-KR",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f8f5",
+  "theme_color": "#294c40",
+  "orientation": "any",
+  "categories": ["lifestyle", "shopping", "productivity"],
+  "icons": [
+    {
+      "src": "./assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
