@@ -7,11 +7,11 @@ const source = await readFile(new URL('../dist/sw.js', import.meta.url), 'utf8')
 const indexHtml = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
 const origin = 'https://example.test';
 const oldCacheName = 'mwo-satji-shell-v3';
-const newCacheName = 'mwo-satji-shell-v4';
-const corePaths = ['/index.html', '/styles.css?v=4', '/app.js?v=4', '/domain.js', '/vault.js', '/device-store.js', '/manifest.webmanifest'];
+const newCacheName = 'mwo-satji-shell-v5';
+const corePaths = ['/index.html', '/styles.css?v=5', '/app.js?v=5', '/domain.js', '/vault.js', '/device-store.js', '/manifest.webmanifest'];
 
 // Frozen v3 static fetch behavior. During an update it can still control a page
-// whose freshly fetched HTML requests the v4 assets, before v4 claims clients.
+// whose freshly fetched HTML requests the v5 assets, before v5 claims clients.
 const previousWorkerSource = `
 const CACHE_NAME = 'mwo-satji-shell-v3';
 const STATIC_URLS = new Set([
@@ -37,6 +37,11 @@ self.addEventListener('fetch', event => {
   })());
 });
 `;
+
+// v4 uses the same exact-URL static handler with revisioned CSS/script URLs.
+const previousRevisionedWorkerSource = previousWorkerSource
+  .replace('mwo-satji-shell-v3', 'mwo-satji-shell-v4')
+  .replace("'./styles.css', './app.js'", "'./styles.css?v=4', './app.js?v=4'");
 
 function response(body = 'app file', properties = {}) {
   return { body, ok: true, redirected: false, type: 'basic', clone() { return response(body, properties); }, ...properties };
@@ -128,7 +133,7 @@ test('a successful install serves every core module and revisioned CSS/script of
 test('HTML requests exactly the revisioned CSS and script precached for this release', async () => {
   const stylePath = indexHtml.match(/<link\b[^>]*rel="stylesheet"[^>]*href="([^"]+)"/)?.[1];
   const scriptPath = indexHtml.match(/<script\b[^>]*type="module"[^>]*src="([^"]+)"/)?.[1];
-  assert.deepEqual([stylePath, scriptPath], ['./styles.css?v=4', './app.js?v=4']);
+  assert.deepEqual([stylePath, scriptPath], ['./styles.css?v=5', './app.js?v=5']);
   const worker = createWorker();
   await worker.lifecycle('install');
   worker.goOffline();
@@ -138,14 +143,21 @@ test('HTML requests exactly the revisioned CSS and script precached for this rel
   }
 });
 
-test('a controlling v3 worker cannot substitute cached unversioned assets for v4 requests', async () => {
-  const worker = createWorker({ workerSource: previousWorkerSource });
-  assert.equal((await worker.fetch(`${origin}/styles.css`)).body, 'previous styles');
-  assert.equal((await worker.fetch(`${origin}/app.js`)).body, 'previous script');
-  for (const path of ['/styles.css?v=4', '/app.js?v=4']) {
-    assert.equal(worker.fetch(`${origin}${path}`), undefined);
+test('controlling v3 and v4 workers cannot substitute old cached assets for v5 requests', async () => {
+  for (const [workerSource, revision] of [[previousWorkerSource, 3], [previousRevisionedWorkerSource, 4]]) {
+    const worker = createWorker({ workerSource });
+    const suffix = revision === 4 ? '?v=4' : '';
+    worker.stores.set(`mwo-satji-shell-v${revision}`, new Map([
+      [`${origin}/styles.css${suffix}`, response('previous styles')],
+      [`${origin}/app.js${suffix}`, response('previous script')],
+    ]));
+    assert.equal((await worker.fetch(`${origin}/styles.css${suffix}`)).body, 'previous styles');
+    assert.equal((await worker.fetch(`${origin}/app.js${suffix}`)).body, 'previous script');
+    for (const path of ['/styles.css?v=5', '/app.js?v=5']) {
+      assert.equal(worker.fetch(`${origin}${path}`), undefined);
+    }
+    assert.deepEqual(worker.fetchCalls, []);
   }
-  assert.deepEqual(worker.fetchCalls, []);
 });
 
 test('any missing core file prevents activation and preserves the previous version', async (t) => {
@@ -184,8 +196,8 @@ test('local previews bypass cache and remove only this app caches', async () => 
     await worker.lifecycle('install');
     assert.deepEqual(worker.fetchCalls, []);
     assert.equal(worker.fetch(`${scope}app.js`), undefined);
-    assert.equal(worker.fetch(`${scope}app.js?v=4`), undefined);
-    assert.equal(worker.fetch(`${scope}styles.css?v=4`), undefined);
+    assert.equal(worker.fetch(`${scope}app.js?v=5`), undefined);
+    assert.equal(worker.fetch(`${scope}styles.css?v=5`), undefined);
     await worker.lifecycle('activate');
     assert.deepEqual([...worker.stores.keys()], ['other-app-cache']);
   }
@@ -195,12 +207,12 @@ test('only exact release asset URLs are intercepted; APIs, auth and other querie
   const worker = createWorker();
   const paths = [
     '/api/records', '/auth/login', '/vault.js?cache=other', '/private.json',
-    '/styles.css', '/app.js', '/styles.css?v=3', '/app.js?v=5',
-    '/styles.css?v=4&other=1', '/app.js?v=4&v=4', '/app.js?other=1&v=4',
+    '/styles.css', '/app.js', '/styles.css?v=4', '/app.js?v=6',
+    '/styles.css?v=5&other=1', '/app.js?v=5&v=5', '/app.js?other=1&v=5',
   ];
   for (const path of paths) assert.equal(worker.fetch(`${origin}${path}`), undefined);
   assert.equal(worker.fetch('https://external.test/app.js'), undefined);
-  assert.equal(worker.fetch(`${origin}/app.js?v=4`, { method: 'POST' }), undefined);
+  assert.equal(worker.fetch(`${origin}/app.js?v=5`, { method: 'POST' }), undefined);
   assert.equal(worker.fetch(`${origin}/?login=1`, { mode: 'navigate' }), undefined);
   assert.equal(worker.fetch(`${origin}/auth/login`, { mode: 'navigate' }), undefined);
   assert.deepEqual(worker.fetchCalls, []);

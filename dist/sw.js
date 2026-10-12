@@ -1,12 +1,12 @@
 /* Static app shell only. Encrypted purchase records stay on this device. */
 const CACHE_PREFIX = 'mwo-satji-shell-';
-const CACHE_NAME = `${CACHE_PREFIX}v4`;
+const CACHE_NAME = `${CACHE_PREFIX}v5`;
 const IS_LOCAL_PREVIEW = ['localhost', '127.0.0.1', '[::1]', '::1']
   .includes(new URL(self.registration.scope).hostname);
 const CORE_PATHS = [
   './index.html',
-  './styles.css?v=4',
-  './app.js?v=4',
+  './styles.css?v=5',
+  './app.js?v=5',
   './domain.js',
   './vault.js',
   './device-store.js',
