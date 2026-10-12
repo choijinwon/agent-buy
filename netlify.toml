@@ -1,0 +1,13 @@
+[build]
+  publish = "dist"
+  command = ""
+
+# The service worker caches the exact index.html URL without redirects.
+[build.processing.html]
+  pretty_urls = false
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "no-cache"
+    X-Content-Type-Options = "nosniff"
