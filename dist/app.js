@@ -130,7 +130,7 @@ function ensureDeviceReady(next) {
   $('#settings-dialog').close();
   $('#record-dialog').close();
   const dialog = $('#vault-dialog');
-  dialog.innerHTML = `<div class="dialog-heading"><div><p class="eyebrow">ONLY ON YOUR DEVICE</p><h2 id="vault-title">내 기기 보관함 만들기</h2></div><button class="icon-button" data-action="close-dialog" aria-label="닫기">${icon('close')}</button></div><div class="vault-dialog-body"><div class="device-note">${icon('device')}휴대폰의 기록은 휴대폰에,<br>PC의 기록은 PC에 저장해요.</div><p class="vault-description">기록과 백업을 비밀번호로 보호해요.<br>구매 내용을 서버나 외부 AI에 보내지 않아요.</p>${vaultForm(true)}</div>`;
+  dialog.innerHTML = `<div class="dialog-heading"><div><p class="eyebrow">ONLY ON YOUR DEVICE</p><h2 id="vault-title">내 기기 보관함 만들기</h2></div><button class="icon-button" data-action="close-dialog" aria-label="닫기">${icon('close')}</button></div><div class="vault-dialog-body"><div class="device-note">${icon('device')}<span>휴대폰의 기록은 휴대폰에,<br>PC의 기록은 PC에 저장해요.</span></div><p class="vault-description">기록과 백업을 비밀번호로 보호해요.<br>구매 내용을 서버나 외부 AI에 보내지 않아요.</p>${vaultForm(true)}</div>`;
   dialog.showModal();
   $('input[name="password"]', dialog).focus();
 }

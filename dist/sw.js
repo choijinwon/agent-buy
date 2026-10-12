@@ -1,12 +1,12 @@
 /* Static app shell only. Encrypted purchase records stay on this device. */
 const CACHE_PREFIX = 'mwo-satji-shell-';
-const CACHE_NAME = `${CACHE_PREFIX}v3`;
+const CACHE_NAME = `${CACHE_PREFIX}v4`;
 const IS_LOCAL_PREVIEW = ['localhost', '127.0.0.1', '[::1]', '::1']
   .includes(new URL(self.registration.scope).hostname);
 const CORE_PATHS = [
   './index.html',
-  './styles.css',
-  './app.js',
+  './styles.css?v=4',
+  './app.js?v=4',
   './domain.js',
   './vault.js',
   './device-store.js',
@@ -78,7 +78,8 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
 
-  // Only known app URLs are eligible; API, auth routes, and query URLs pass through.
+  // Only exact app URLs are eligible, including this release's two revision
+  // URLs. API, auth, older revisions, and all other query URLs pass through.
   if (request.mode === 'navigate') {
     if (!NAVIGATION_URLS.has(url.href)) return;
     event.respondWith((async () => {

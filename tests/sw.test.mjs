@@ -4,18 +4,51 @@ import test from 'node:test';
 import vm from 'node:vm';
 
 const source = await readFile(new URL('../dist/sw.js', import.meta.url), 'utf8');
+const indexHtml = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
 const origin = 'https://example.test';
-const oldCacheName = 'mwo-satji-shell-v2';
-const newCacheName = 'mwo-satji-shell-v3';
-const corePaths = ['/index.html', '/styles.css', '/app.js', '/domain.js', '/vault.js', '/device-store.js', '/manifest.webmanifest'];
+const oldCacheName = 'mwo-satji-shell-v3';
+const newCacheName = 'mwo-satji-shell-v4';
+const corePaths = ['/index.html', '/styles.css?v=4', '/app.js?v=4', '/domain.js', '/vault.js', '/device-store.js', '/manifest.webmanifest'];
+
+// Frozen v3 static fetch behavior. During an update it can still control a page
+// whose freshly fetched HTML requests the v4 assets, before v4 claims clients.
+const previousWorkerSource = `
+const CACHE_NAME = 'mwo-satji-shell-v3';
+const STATIC_URLS = new Set([
+  './index.html', './styles.css', './app.js', './domain.js', './vault.js',
+  './device-store.js', './manifest.webmanifest', './assets/icon.svg',
+  './assets/icon-192.png', './assets/icon-512.png',
+].map(path => new URL(path, self.registration.scope).href));
+function mayCache(response) {
+  return response.ok && !response.redirected && response.type === 'basic';
+}
+self.addEventListener('fetch', event => {
+  const request = event.request;
+  const url = new URL(request.url);
+  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
+  if (!STATIC_URLS.has(url.href)) return;
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    const response = await fetch(request);
+    if (mayCache(response)) await cache.put(request, response.clone());
+    return response;
+  })());
+});
+`;
 
 function response(body = 'app file', properties = {}) {
   return { body, ok: true, redirected: false, type: 'basic', clone() { return response(body, properties); }, ...properties };
 }
 
-function createWorker({ scope = `${origin}/`, failFetchPath, invalidPath, rejectPutPath } = {}) {
+function createWorker({ scope = `${origin}/`, failFetchPath, invalidPath, rejectPutPath, workerSource = source } = {}) {
   const listeners = new Map();
-  const oldEntries = new Map([[`${origin}/index.html`, response('previous app')]]);
+  const oldEntries = new Map([
+    [`${origin}/index.html`, response('previous app')],
+    [`${origin}/styles.css`, response('previous styles')],
+    [`${origin}/app.js`, response('previous script')],
+  ]);
   const stores = new Map([[oldCacheName, oldEntries], ['other-app-cache', new Map()]]);
   const fetchCalls = [];
   let skipped = false;
@@ -49,12 +82,13 @@ function createWorker({ scope = `${origin}/`, failFetchPath, invalidPath, reject
     async fetch(request) {
       const url = new URL(toUrl(request));
       fetchCalls.push(url.href);
-      if (offline || url.pathname === failFetchPath) throw new Error('network unavailable');
-      if (url.pathname === invalidPath) return response('missing', { ok: false });
-      return response(url.pathname);
+      const path = `${url.pathname}${url.search}`;
+      if (offline || path === failFetchPath) throw new Error('network unavailable');
+      if (path === invalidPath) return response('missing', { ok: false });
+      return response(path);
     },
   };
-  vm.runInNewContext(source, context);
+  vm.runInNewContext(workerSource, context);
   return {
     stores, fetchCalls,
     get skipped() { return skipped; },
@@ -76,7 +110,7 @@ function createWorker({ scope = `${origin}/`, failFetchPath, invalidPath, reject
   };
 }
 
-test('a successful install serves every core module and the app offline', async () => {
+test('a successful install serves every core module and revisioned CSS/script offline', async () => {
   const worker = createWorker();
   await worker.lifecycle('install');
   assert.equal(worker.skipped, true);
@@ -89,6 +123,29 @@ test('a successful install serves every core module and the app offline', async 
     assert.equal((await worker.fetch(`${origin}${path}`)).body, path);
   }
   assert.equal((await worker.fetch(`${origin}/`, { mode: 'navigate' })).body, '/index.html');
+});
+
+test('HTML requests exactly the revisioned CSS and script precached for this release', async () => {
+  const stylePath = indexHtml.match(/<link\b[^>]*rel="stylesheet"[^>]*href="([^"]+)"/)?.[1];
+  const scriptPath = indexHtml.match(/<script\b[^>]*type="module"[^>]*src="([^"]+)"/)?.[1];
+  assert.deepEqual([stylePath, scriptPath], ['./styles.css?v=4', './app.js?v=4']);
+  const worker = createWorker();
+  await worker.lifecycle('install');
+  worker.goOffline();
+  for (const path of [stylePath, scriptPath]) {
+    const url = new URL(path, `${origin}/`);
+    assert.equal((await worker.fetch(url.href)).body, `${url.pathname}${url.search}`);
+  }
+});
+
+test('a controlling v3 worker cannot substitute cached unversioned assets for v4 requests', async () => {
+  const worker = createWorker({ workerSource: previousWorkerSource });
+  assert.equal((await worker.fetch(`${origin}/styles.css`)).body, 'previous styles');
+  assert.equal((await worker.fetch(`${origin}/app.js`)).body, 'previous script');
+  for (const path of ['/styles.css?v=4', '/app.js?v=4']) {
+    assert.equal(worker.fetch(`${origin}${path}`), undefined);
+  }
+  assert.deepEqual(worker.fetchCalls, []);
 });
 
 test('any missing core file prevents activation and preserves the previous version', async (t) => {
@@ -127,17 +184,23 @@ test('local previews bypass cache and remove only this app caches', async () => 
     await worker.lifecycle('install');
     assert.deepEqual(worker.fetchCalls, []);
     assert.equal(worker.fetch(`${scope}app.js`), undefined);
+    assert.equal(worker.fetch(`${scope}app.js?v=4`), undefined);
+    assert.equal(worker.fetch(`${scope}styles.css?v=4`), undefined);
     await worker.lifecycle('activate');
     assert.deepEqual([...worker.stores.keys()], ['other-app-cache']);
   }
 });
 
-test('API, authentication, external, query and write requests are never intercepted', () => {
+test('only exact release asset URLs are intercepted; APIs, auth and other queries pass through', () => {
   const worker = createWorker();
-  const paths = ['/api/records', '/auth/login', '/vault.js?cache=other', '/private.json'];
+  const paths = [
+    '/api/records', '/auth/login', '/vault.js?cache=other', '/private.json',
+    '/styles.css', '/app.js', '/styles.css?v=3', '/app.js?v=5',
+    '/styles.css?v=4&other=1', '/app.js?v=4&v=4', '/app.js?other=1&v=4',
+  ];
   for (const path of paths) assert.equal(worker.fetch(`${origin}${path}`), undefined);
   assert.equal(worker.fetch('https://external.test/app.js'), undefined);
-  assert.equal(worker.fetch(`${origin}/app.js`, { method: 'POST' }), undefined);
+  assert.equal(worker.fetch(`${origin}/app.js?v=4`, { method: 'POST' }), undefined);
   assert.equal(worker.fetch(`${origin}/?login=1`, { mode: 'navigate' }), undefined);
   assert.equal(worker.fetch(`${origin}/auth/login`, { mode: 'navigate' }), undefined);
   assert.deepEqual(worker.fetchCalls, []);

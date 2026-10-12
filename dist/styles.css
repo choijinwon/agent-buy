@@ -14,6 +14,8 @@
   color: var(--body);
   background: var(--bg);
   font-synthesis: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 * { box-sizing: border-box; }
 body { margin: 0; font-size: 14px; line-height: 1.6; letter-spacing: -.35px; }
@@ -58,7 +60,7 @@ h3 { font-size: 16px; }
 .portal-search-caption strong { color: #079746; font-weight: 650; }
 .portal-search { min-height: 62px; display: flex; align-items: center; gap: 15px; padding: 0 18px 0 23px; border: 2px solid var(--green); border-radius: 34px; background: #fff; }
 .portal-search:focus-within { box-shadow: 0 0 0 3px #03c75a12; }
-.portal-search-mark { display: flex; color: var(--green); align-items: center; }
+.portal-search-mark { display: flex; flex: none; color: var(--green); align-items: center; }
 .portal-search-mark .icon, .portal-search > .icon { width: 31px; height: 31px; color: var(--green); stroke-width: 2.6; }
 .portal-search input { width: 100%; flex: 1; border: 0; outline: 0; background: transparent; padding: 12px 0; font-size: 18px; font-weight: 500; }
 .portal-search input::placeholder { color: #92979d; font-weight: 400; }
@@ -106,7 +108,7 @@ h3 { font-size: 16px; }
 .heading-add { margin-top: 5px; }
 .dashboard-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(290px, 1fr); gap: 24px; }
 .main-column, .side-column { display: flex; flex-direction: column; min-width: 0; gap: 24px; }
-.panel, .quick-card, .month-overview, .reminder-highlight { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); }
+.panel, .quick-card, .month-overview, .reminder-highlight { min-width: 0; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); }
 .panel { padding: 22px; }
 .quick-card { padding: 24px; position: relative; overflow: hidden; background: linear-gradient(105deg, #f6fcf8, #fff 77%); }
 .quick-content { position: relative; z-index: 1; }
@@ -303,21 +305,23 @@ h3 { font-size: 16px; }
 .chart-note { text-align: center; font-size: 12px; color: #939f97; margin-top: 17px; }
 
 /* Local vault, settings, and record forms. */
-dialog { width: min(570px, calc(100% - 32px)); max-height: calc(100dvh - 48px); padding: 0; border: 1px solid #dce1de; border-radius: 12px; color: var(--body); background: #fff; box-shadow: 0 18px 70px #172a2133; overflow: auto; }
+dialog { width: min(570px, calc(100% - 32px)); max-width: calc(100% - 32px); max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); padding: 0; border: 1px solid #dce1de; border-radius: 12px; color: var(--body); background: #fff; box-shadow: 0 18px 70px #172a2133; overflow: auto; overscroll-behavior: contain; }
 dialog::backdrop { background: #1f30286b; backdrop-filter: blur(2px); }
 .dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 25px 28px 21px; }
 .dialog-heading .eyebrow { font-size: 11px; margin-bottom: 7px; }
+.dialog-heading > div { min-width: 0; }
+.dialog-heading h2 { overflow-wrap: anywhere; }
 .dialog-heading h2 { font-size: 23px; font-weight: 750; }
 .dialog-heading .icon-button { align-self: flex-start; background: #f4f6f5; }
 .parse-notice { display: flex; align-items: center; gap: 7px; background: #effbf4; padding: 12px 27px; color: #3e8c58; font-size: 13px; }
 .parse-notice .icon { width: 18px; height: 18px; }
 .form-body { padding: 23px 28px 10px; }
-.field { display: block; color: #52685a; font-size: 13px; font-weight: 600; margin-bottom: 18px; }
+.field { display: block; min-width: 0; color: #52685a; font-size: 13px; font-weight: 600; margin-bottom: 18px; }
 .field > span { margin-left: 3px; color: #95a198; font-size: 11px; font-weight: 400; }
 .field > input, .field > select, .field > textarea, .input-suffix { display: block; width: 100%; background: #fff; border: 1px solid #dce2de; border-radius: 6px; padding: 11px 12px; margin-top: 7px; color: #34483b; font-size: 14px; font-weight: 400; }
 .field input::placeholder, .field textarea::placeholder { color: #a5afa8; }
 .field textarea { resize: vertical; min-height: 76px; }
-.form-two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .input-suffix { display: flex; align-items: center; padding: 0; }
 .input-suffix > input { padding: 11px 12px; width: 100%; border: 0; border-radius: 6px; background: none; font-size: 14px; }
 .input-suffix > span { color: #95a198; font-size: 13px; padding-right: 13px; }
@@ -349,7 +353,8 @@ dialog::backdrop { background: #1f30286b; backdrop-filter: blur(2px); }
 .settings-body h3 { color: #3e6e4d; font-size: 15px; margin-top: 24px; }
 .settings-description { font-size: 13px; color: #829389; line-height: 1.9; margin: 8px 0 13px; word-break: keep-all; }
 .settings-body .secondary-button { font-size: 13px; }
-.settings-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.settings-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.settings-buttons > button { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
 .settings-bottom { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid #e9eeeb; margin-top: 25px; padding-top: 17px; }
 .settings-bottom > span { font-size: 11px; color: #97a49b; }
 .storage-facts { margin: 0 0 16px; padding: 16px; border: 1px solid #e7ece9; border-radius: 6px; background: #fafcfb; }
@@ -380,6 +385,7 @@ dialog::backdrop { background: #1f30286b; backdrop-filter: blur(2px); }
 .vault-dialog-body .vault-description { margin: 17px 0 22px; }
 .device-note { display: flex; align-items: center; gap: 13px; border: 1px solid #daeee2; border-radius: 6px; background: #f2fbf6; padding: 16px; font-size: 14px; line-height: 1.8; color: #4e8a62; }
 .device-note .icon { width: 28px; height: 28px; color: #35a761; }
+.device-note > span { min-width: 0; overflow-wrap: anywhere; }
 .toast { position: fixed; left: 50%; bottom: 25px; transform: translate(-50%, 20px); opacity: 0; width: max-content; max-width: calc(100% - 32px); border-radius: 8px; background: #243c2d; color: #f8fdf9; padding: 13px 20px; box-shadow: 0 5px 20px #17332420; z-index: 100; pointer-events: none; font-size: 13px; line-height: 1.8; transition: opacity .2s, transform .2s; }
 .toast.visible { opacity: 1; transform: translate(-50%, 0); }
 
@@ -431,11 +437,11 @@ dialog::backdrop { background: #1f30286b; backdrop-filter: blur(2px); }
 @media (max-width: 760px) {
   body { font-size: 14px; }
   .portal-header { padding: 0 18px 20px; }
-  .portal-utility { height: 63px; gap: 9px; }
+  .portal-utility { height: auto; min-height: 63px; padding: 12px 0; gap: 9px; flex-wrap: wrap; }
   .brand { font-size: 26px; gap: 4px; }
   .brand-symbol { width: 31px; height: 35px; }
   .brand-symbol .icon { width: 29px; height: 29px; }
-  .portal-utility-actions { gap: 3px; }
+  .portal-utility-actions { gap: 3px; max-width: 100%; margin-left: auto; }
   .device-chip { font-size: 11px; gap: 4px; }
   .device-chip .icon { width: 14px; height: 14px; }
   .portal-utility-actions .icon-button { width: 32px; height: 34px; padding: 7px; }
@@ -486,6 +492,8 @@ dialog::backdrop { background: #1f30286b; backdrop-filter: blur(2px); }
   .quick-examples button { font-size: 11px; padding: 4px 7px; }
   .panel, .month-overview { padding: 19px 17px; }
   .section-heading { margin-bottom: 15px; }
+  .section-heading { flex-wrap: wrap; }
+  .section-heading h2 { min-width: 0; flex-wrap: wrap; }
   .section-heading h2 { font-size: 16px; }
   .text-button { font-size: 12px; }
   .category-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 0; }
@@ -554,7 +562,7 @@ dialog::backdrop { background: #1f30286b; backdrop-filter: blur(2px); }
   .filter-chips::-webkit-scrollbar { display: none; }
   .filter-chip { font-size: 12px; padding: 6px 10px; min-height: 34px; flex: none; white-space: nowrap; }
   .filter-chip .icon { width: 15px; height: 15px; }
-  .results-heading { font-size: 12px; margin-top: 13px; }
+  .results-heading { font-size: 12px; margin-top: 13px; flex-wrap: wrap; gap: 6px 12px; }
   .records-list .purchase-row { padding: 18px 0; }
   .records-list .purchase-info > strong, .records-list .purchase-amount > strong { font-size: 13px; }
   .records-list .category-icon { width: 35px; height: 35px; }
@@ -563,7 +571,7 @@ dialog::backdrop { background: #1f30286b; backdrop-filter: blur(2px); }
   .empty-state h3 { font-size: 16px; }
   .empty-state p { font-size: 12px; }
   .reminder-toolbar { align-items: flex-start; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-  .reminder-toolbar .filter-chips { padding-bottom: 0; }
+  .reminder-toolbar .filter-chips { max-width: 100%; padding-bottom: 0; }
   .reminder-toolbar .secondary-button { font-size: 12px; min-height: 36px; }
   .reminder-grid { grid-template-columns: 1fr; gap: 17px; }
   .reminder-card { padding: 22px; }
@@ -575,7 +583,7 @@ dialog::backdrop { background: #1f30286b; backdrop-filter: blur(2px); }
   .inline-info .icon { margin-top: 3px; }
   .report-toolbar { flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
   .report-toolbar .month-control { gap: 2px; }
-  .report-toolbar .month-control input { width: 141px; font-size: 15px; }
+  .report-toolbar .month-control input { width: 141px; font-size: 16px; }
   .report-toolbar .month-control .icon-button { width: 27px; }
   .report-toolbar .text-button { font-size: 11px; }
   .report-summary { grid-template-columns: 1fr; gap: 14px; margin-bottom: 18px; }
@@ -592,7 +600,7 @@ dialog::backdrop { background: #1f30286b; backdrop-filter: blur(2px); }
   .report-grid { grid-template-columns: 1fr; gap: 18px; }
   .weekly-chart { height: 225px; }
   .breakdown-label { font-size: 12px; }
-  dialog { width: calc(100% - 24px); max-height: calc(100dvh - 32px); border-radius: 10px; }
+  dialog { width: calc(100% - 24px); max-width: calc(100% - 24px); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); border-radius: 10px; }
   .dialog-heading { padding: 21px 20px 18px; }
   .dialog-heading h2 { font-size: 21px; }
   .dialog-heading .eyebrow { font-size: 11px; }
@@ -633,11 +641,20 @@ dialog::backdrop { background: #1f30286b; backdrop-filter: blur(2px); }
   .vault-card h1 { font-size: 22px; }
   .vault-card .field > input { font-size: 16px; }
   .vault-description { font-size: 12px; }
+  .vault-description, .vault-recovery-note, .settings-description { overflow-wrap: anywhere; }
+  .vault-card .primary-button, .vault-dialog-body .primary-button, .vault-backup { white-space: normal; }
   .vault-recovery-note { font-size: 12px; }
   .vault-location { font-size: 11px; line-height: 1.8; }
   .vault-footnote { font-size: 11px; }
   .vault-dialog-body { padding: 0 20px 24px; }
   .device-note { font-size: 13px; padding: 14px; gap: 10px; }
+}
+
+@media (max-width: 480px) {
+  .form-two { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .settings-buttons { grid-template-columns: minmax(0, 1fr); }
+  .dialog-footer { flex-wrap: wrap; }
+  .dialog-footer .primary-button { margin-left: auto; }
 }
 
 @media (max-width: 380px) {
