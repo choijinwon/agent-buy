@@ -8,9 +8,13 @@
 
 ## Netlify 배포
 
+[운영 사이트](https://agent-buy.netlify.app/) · [Netlify 프로젝트](https://app.netlify.com/projects/agent-buy)
+
 저장소 루트의 `netlify.toml`에서 배포 폴더를 `dist`로 지정합니다. 빌드 명령과 환경변수는 필요하지 않습니다. 서비스 워커가 정확한 파일 URL을 캐시하므로 Pretty URLs는 끕니다.
 
 Netlify CLI로 연결된 프로젝트에 배포할 때는 `netlify deploy --prod --dir dist --no-build`를 사용합니다. 새 도메인은 기존 사이트와 브라우저 저장소가 별개입니다. 기록을 옮기려면 기존 사이트에서 암호화 JSON 백업을 내보낸 뒤 새 사이트에서 가져오세요.
+
+현재 운영 배포는 CLI로 수행하며 GitHub 푸시 자동 배포는 연결하지 않았습니다.
 
 ## 내 기기에만 보관하는 개인 가계부
 
